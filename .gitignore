@@ -1,0 +1,14 @@
+# dados baixados automaticamente do repositório do projeto
+IC_Grafos_FIIs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,5 @@
+# Mesmas versões do pipeline do projeto (yoonsungj04/IC_Grafos_FIIs)
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.13.1
+networkx==3.3
