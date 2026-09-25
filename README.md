@@ -65,6 +65,10 @@ python ic_agm_augusto.py
 The data are downloaded automatically from the project's public repository.
 To use a copy you already have, point `IC_DADOS` at its `data/raw` folder.
 
+Tested with the pinned versions in `requirements.txt` and with the latest
+releases at the time of writing (NumPy 2.5, pandas 3.0, SciPy 1.18,
+NetworkX 3.7); both reproduce the manuscript exactly.
+
 ## Data and credits
 
 The frozen raw series (adjusted and unadjusted prices, distributions, the

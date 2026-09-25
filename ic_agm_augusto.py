@@ -99,11 +99,14 @@ ret_p_mais_d = np.log((PB + D) / PB.shift(1)).dropna(how="all").reindex(df_retor
 
 
 def matriz_distancia(ret):
-    d = np.sqrt(2 * (1 - ret.corr()))
+    rho = ret.corr()
     # a correlação de um ativo consigo mesmo pode sair 1.0000000000000002 e
-    # gerar sqrt(negativo) = NaN na diagonal; zerar evita arestas espúrias
-    np.fill_diagonal(d.values, 0.0)
-    return d
+    # gerar sqrt(negativo) = NaN; o clip e a diagonal zerada evitam arestas
+    # espúrias. Trabalha num array próprio porque, no pandas 3, `.values` de
+    # um DataFrame é somente leitura.
+    d = np.sqrt(np.clip(2 * (1 - rho.to_numpy()), 0.0, None))
+    np.fill_diagonal(d, 0.0)
+    return pd.DataFrame(d, index=rho.index, columns=rho.columns)
 
 
 # %% CÉLULA 2 — AGM E ESCORE COMPOSTO
