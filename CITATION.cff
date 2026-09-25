@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: >-
+  If you use this code, please cite it as below. The results it reproduces
+  are reported in the manuscript listed under references.
+title: "IC-AGM-FIIs: Minimum Spanning Tree portfolio selection for Brazilian real estate investment funds"
+type: software
+authors:
+  - family-names: "Carneiro da Silva"
+    given-names: "Augusto"
+    affiliation: "School of Technology (FT), University of Campinas (UNICAMP)"
+repository-code: "https://github.com/Augusto-Carneiro/IC-AGM-FIIs"
+license: MIT
+keywords:
+  - portfolio selection
+  - minimum spanning tree
+  - correlation networks
+  - real estate investment funds
+  - FII
+  - econophysics
+references:
+  - type: unpublished
+    title: "A Unified Comparison of Graph-Based Portfolio Construction for Brazilian Real Estate Investment Funds under Realistic Trading Conditions"
+    authors:
+      - family-names: "Carneiro da Silva"
+        given-names: "Augusto"
+      - family-names: "Jang"
+        given-names: "Yoon Sung"
+      - family-names: "Bertini Junior"
+        given-names: "João Roberto"
+    year: 2026
+    notes: "Manuscript in preparation."
+  - type: software
+    title: "IC_Grafos_FIIs"
+    authors:
+      - family-names: "Jang"
+        given-names: "Yoon Sung"
+    repository-code: "https://github.com/yoonsungj04/IC_Grafos_FIIs"
+    notes: "Project pipeline and source of the frozen input data."

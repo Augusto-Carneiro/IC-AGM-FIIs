@@ -1,19 +1,24 @@
 # IC-AGM-FIIs
 
+[![Reproduce paper](https://github.com/Augusto-Carneiro/IC-AGM-FIIs/actions/workflows/reproduce.yml/badge.svg)](https://github.com/Augusto-Carneiro/IC-AGM-FIIs/actions/workflows/reproduce.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](requirements.txt)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Augusto-Carneiro/IC-AGM-FIIs/blob/main/ic_agm_augusto.ipynb)
+
 **Minimum Spanning Tree (MST) portfolio selection for Brazilian real estate
 investment funds (FIIs).**
 
 This repository is my implementation of the MST arm of an undergraduate
 research project (PIBIC/CNPq, University of Campinas) that compares
 correlation-network filters as tools for portfolio selection. It
-independently reproduces every MST result reported in the manuscript
+independently reproduces the MST results reported in the manuscript
 
 > A. Carneiro da Silva, Y. S. Jang and J. R. Bertini Junior.
 > *A Unified Comparison of Graph-Based Portfolio Construction for Brazilian
 > Real Estate Investment Funds under Realistic Trading Conditions.*
 > Manuscript in preparation.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Augusto-Carneiro/IC-AGM-FIIs/blob/main/ic_agm_augusto.ipynb)
+![Minimum Spanning Tree of 51 FIIs, nodes coloured by composite centrality](figures/mst_centrality.png)
 
 ## What it does
 
@@ -46,28 +51,37 @@ The last cell checks the results against the manuscript and ends with
 | Hybrid | 10 / 15 / 20 | −1.49 / −1.41 / −1.30 | 0.44 / 0.40 / 0.35 |
 | IFIX (XFIX11) | — | −0.91 | — |
 
+![Growth of BRL 1 out of sample for the k = 10 portfolios, the IFIX and the CDI](figures/growth_out_of_sample.png)
+
 Every Sharpe ratio is negative because no FII portfolio, nor the index,
-outperformed the CDI (about 12% per annum) over the window. The
-Peripheral–Central difference at k = 10 is −0.10 (95% CI [−1.13, +1.07],
-p = 0.87): not statistically significant.
+outperformed the CDI (about 12% per annum) over the window — the dotted line
+above. The Peripheral–Central difference at k = 10 is −0.10 (95% CI
+[−1.13, +1.07], p = 0.87): not statistically significant.
 
 ## How to run
 
 **Colab:** click the badge above, then *Runtime → Run all*.
 
-**Locally** (Python 3.12 and `git`):
+**Locally** (Python 3.12):
 
 ```bash
 pip install -r requirements.txt
 python ic_agm_augusto.py
 ```
 
-The data are downloaded automatically from the project's public repository.
-To use a copy you already have, point `IC_DADOS` at its `data/raw` folder.
+The input data are downloaded automatically from the project's repository,
+pinned to a fixed commit and verified by SHA-256 checksum: if a file ever
+changes upstream, the run stops instead of silently producing different
+numbers. To use a copy you already have, point `IC_DADOS` at its `data/raw`
+folder.
 
-Tested with the pinned versions in `requirements.txt` and with the latest
-releases at the time of writing (NumPy 2.5, pandas 3.0, SciPy 1.18,
-NetworkX 3.7); both reproduce the manuscript exactly.
+## Continuous verification
+
+A [GitHub Actions workflow](.github/workflows/reproduce.yml) runs the
+notebook and checks every value against the manuscript on each push and
+once a month, twice: with the pinned versions in `requirements.txt` and with
+the latest release of every library (the ones Colab uses). The badge at the
+top shows the result of the last run.
 
 ## Data and credits
 
@@ -83,13 +97,20 @@ funded by PIBIC/CNPq and UNICAMP.
 The notebook begins with a table of the corrections made to the version used
 in my original PIBIC report.
 
+## Citation
+
+Use the *Cite this repository* button on the right, which reads
+[`CITATION.cff`](CITATION.cff).
+
 ## Em português
 
 Implementação do braço da Árvore Geradora Mínima (AGM) da Iniciação
 Científica sobre formação de carteiras de FIIs por grafos. O notebook
 reproduz exatamente os resultados da AGM do artigo, com custos de transação
 sobre o giro e IR de 20% sobre o ganho de preço realizado. Para rodar, abra
-no Colab pelo botão acima e use *Ambiente de execução → Executar tudo*.
+no Colab pelo botão acima e use *Ambiente de execução → Executar tudo*. A
+cada alteração, o GitHub roda o notebook sozinho e confere os resultados
+com o artigo.
 
 ## License
 

@@ -1,5 +1,5 @@
-# dados baixados automaticamente do repositório do projeto
-IC_Grafos_FIIs/
+# dados baixados automaticamente (fixados por commit e SHA-256)
+dados/
 
 # Python
 __pycache__/

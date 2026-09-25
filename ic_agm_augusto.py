@@ -23,12 +23,18 @@
 # rodar este notebook obtém exatamente os mesmos números — em qualquer dia.
 
 # %% CÉLULA 0 — CONFIGURAÇÃO E DADOS CONGELADOS
+import hashlib
 import os
-import subprocess
+import sys
+import urllib.request
 
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+
+EM_NOTEBOOK = "ipykernel" in sys.modules   # mostra as figuras só no notebook
+os.makedirs("figures", exist_ok=True)
 
 JANELA_TREINO = 360
 JANELA_TESTE = 22
@@ -40,14 +46,40 @@ N_BOOT = 5000
 SEMENTE = 42
 
 # CORREÇÃO (3): dados congelados em vez de download com datetime.now().
-# Os dados vêm do repositório público do projeto. Para usar uma cópia já
-# clonada, defina a variável de ambiente IC_DADOS com o caminho de data/raw.
+# Os arquivos vêm do repositório do projeto, fixados num commit exato e
+# conferidos por SHA-256: se algum mudar, o notebook para em vez de dar
+# números diferentes em silêncio. Para usar uma cópia local, defina a
+# variável de ambiente IC_DADOS com o caminho da pasta data/raw.
+COMMIT_DADOS = "2f25f18a3b1edd6e92d84427a6e5ed6371842ef9"
+URL_DADOS = ("https://raw.githubusercontent.com/yoonsungj04/IC_Grafos_FIIs/"
+             f"{COMMIT_DADOS}/data/raw/")
+SHA256 = {
+    "precos_ajustados.csv": "2bd95c55dfa7602299ea8cdc478f0d53e6762b4e6084315502872de34289858b",
+    "precos_brutos.csv": "2acdcb8a3ee1f81633a9092e49fd80c49fdd8fe310a253b0fd145c1cd87e83c3",
+    "dividendos.csv": "7c3d0a49eaddcbf36568dab3e97980f05a167809ce2537e1d94086793d82f3a8",
+    "cdi.csv": "13baa9ba3afd1c39e5ee956d9c1157579471d9fd2ee50324fd37ca0050206bbf",
+    "benchmark.csv": "beaed3b7ec28abefa28a4f809ce2bf0cc4faf031d60615619f6344d41572cb23",
+}
+
+
+def _sha256(caminho):
+    h = hashlib.sha256()
+    with open(caminho, "rb") as f:
+        for bloco in iter(lambda: f.read(1 << 20), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
 DADOS = os.environ.get("IC_DADOS")
 if not DADOS:
-    if not os.path.exists("IC_Grafos_FIIs"):
-        subprocess.run(["git", "clone", "--depth", "1",
-                        "https://github.com/yoonsungj04/IC_Grafos_FIIs.git"], check=True)
-    DADOS = os.path.join("IC_Grafos_FIIs", "data", "raw")
+    DADOS = "dados"
+    os.makedirs(DADOS, exist_ok=True)
+    for nome, esperado in SHA256.items():
+        caminho = os.path.join(DADOS, nome)
+        if not os.path.exists(caminho) or _sha256(caminho) != esperado:
+            urllib.request.urlretrieve(URL_DADOS + nome, caminho)
+        if _sha256(caminho) != esperado:
+            raise RuntimeError(f"{nome}: o conteúdo não confere com o checksum esperado")
 
 
 def _ler(nome):
@@ -132,6 +164,28 @@ score = calcular_score_alinhado(agm).sort_values(ascending=False)
 print(f"AGM na janela completa: {agm.number_of_nodes()} nós, {agm.number_of_edges()} arestas")
 print("Mais centrais: ", ", ".join(f"{t} ({v:.2f})" for t, v in score.head(5).items()))
 print("Mais periféricos:", ", ".join(f"{t} ({v:.2f})" for t, v in score.tail(5).items()))
+
+
+def _mostrar(fig, nome):
+    fig.savefig(os.path.join("figures", nome), dpi=150, bbox_inches="tight")
+    plt.show() if EM_NOTEBOOK else plt.close(fig)
+
+
+# Figura: a árvore, com cor e tamanho dos nós pelo escore de centralidade
+fig, ax = plt.subplots(figsize=(11, 8.5))
+pos = nx.kamada_kawai_layout(agm, weight="weight")
+nos = list(agm.nodes())
+nx.draw_networkx_edges(agm, pos, ax=ax, edge_color="#b8b8b8", width=1.2)
+nx.draw_networkx_nodes(agm, pos, ax=ax, nodelist=nos,
+                       node_color=[plt.cm.RdYlGn_r(score[n]) for n in nos],
+                       node_size=[180 + 900 * score[n] for n in nos],
+                       edgecolors="#333333", linewidths=0.6)
+nx.draw_networkx_labels(agm, pos, ax=ax, font_size=6.5)
+barra = plt.cm.ScalarMappable(cmap="RdYlGn_r", norm=plt.Normalize(0, 1))
+fig.colorbar(barra, ax=ax, shrink=0.6, label="Composite centrality score")
+ax.set_title("Minimum Spanning Tree of 51 Brazilian FIIs (Mar 2022 – Nov 2025)")
+ax.axis("off")
+_mostrar(fig, "mst_centrality.png")
 
 # %% CÉLULA 3 — FORMAÇÃO DAS CARTEIRAS
 
@@ -250,6 +304,21 @@ fmt["Sharpe"] = fmt["Sharpe"].map(lambda x: f"{x:.2f}")
 fmt["Giro médio"] = fmt["Giro médio"].map(lambda x: "--" if pd.isna(x) else f"{x:.2f}")
 print("\n--- AGM, líquido de custo e IR, fora da amostra ---")
 print(fmt.to_string())
+
+# Figura: crescimento de R$ 1 fora da amostra, com o CDI como referência
+fig, ax = plt.subplots(figsize=(10, 5.5))
+for rotulo, nome, cor in (("periferica_10", "Peripheral-10", "#1a9850"),
+                          ("hibrida_10", "Hybrid-10", "#4575b4"),
+                          ("central_10", "Central-10", "#d73027")):
+    ax.plot((1 + df_liquido[rotulo]).cumprod(), label=nome, color=cor, lw=1.8)
+ax.plot((1 + ret_bench).cumprod(), label="IFIX (XFIX11)", color="black", ls="--", lw=1.4)
+ax.plot((1 + rf).cumprod(), label="CDI", color="#888888", ls=":", lw=1.6)
+ax.axhline(1.0, color="#cccccc", lw=0.8)
+ax.set_ylabel("Growth of BRL 1, net of costs and tax")
+ax.set_title("MST portfolios out of sample (k = 10), Aug 2023 – Oct 2025")
+ax.legend(frameon=False, loc="upper left")
+ax.grid(alpha=0.3)
+_mostrar(fig, "growth_out_of_sample.png")
 
 # %% CÉLULA 7 — SIGNIFICÂNCIA (PERIFÉRICA-10 MENOS CENTRAL-10)
 

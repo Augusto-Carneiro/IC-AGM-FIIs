@@ -1,0 +1,44 @@
+# Roda o notebook e confere todos os números com o artigo.
+#
+# Duas configurações: as versões fixas do requirements.txt e as mais
+# recentes de cada biblioteca (as mesmas que o Colab usa). A execução
+# mensal pega quebras causadas por versões novas das bibliotecas mesmo
+# quando ninguém mexe no repositório.
+name: Reproduce paper
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    name: ${{ matrix.versions }} versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        versions: [pinned, latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.versions }}" = "pinned" ]; then
+            pip install -r requirements.txt
+          else
+            pip install numpy pandas scipy networkx matplotlib
+          fi
+          python -c "import numpy, pandas, scipy, networkx, matplotlib as m; print('numpy', numpy.__version__, '| pandas', pandas.__version__, '| scipy', scipy.__version__, '| networkx', networkx.__version__, '| matplotlib', m.__version__)"
+
+      - name: Run the notebook and check against the paper
+        run: |
+          python ic_agm_augusto.py | tee output.txt
+          grep -q "Tudo confere com o artigo." output.txt
